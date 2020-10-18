@@ -47,10 +47,30 @@ d = {}
 abcA = []
 defgA = []
 hijA = []
+klmA = []
+nopA= []
+qrsA = []
 if get_handw_text_results.status == OperationStatusCodes.succeeded:
     for text_result in get_handw_text_results.analyze_result.read_results:
-       
+  
         for sourceTxt in text_result.lines:
+            new_d = {}
+            new_d[sourceTxt.text] = sourceTxt.bounding_box
+             
+            def Get_invoice_in_pdf(sourceTxt):
+                
+                prcnt = r"Invoice.*\.d*$"
+                prcnt1 =  r"INV.*\-\d.*$"
+ 
+                if (re.findall(prcnt1, sourceTxt)):
+                    f_ans = re.findall(prcnt1, sourceTxt)[0]  
+                elif(re.findall(prcnt, sourceTxt)):
+                    f_ans = re.findall(prcnt, sourceTxt)[0]
+                else:
+                    f_ans = ''
+                
+                return f_ans
+
             def Get_vat_in_document(sourceTxt):
                 
                 prcnt = r"([0-9][0-9]%$|[0-9]%$)"
@@ -61,6 +81,7 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
                     f_ans = 0
     
                 return f_ans
+            
             def Get_total_amount_in_pdf(sourceTxt):
                 lst = r"\d.*,\d{3}\.?\d*$"
                 dcm = r"\d.*\..?\d*$"
@@ -86,8 +107,6 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
                     pass
                 else:
                     f_ans.extend(ttl)   
-               
-                asd = max(f_ans) if f_ans else 0  
                     
                 return f_ans
                 
@@ -117,7 +136,8 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             abc = Get_date_in_pdf(sourceTxt.text)
             defg = Get_total_amount_in_pdf(sourceTxt.text)
             hij = Get_vat_in_document(sourceTxt.text)
-
+            klm = Get_invoice_in_pdf(sourceTxt.text)
+            
             if abc=="" and defg=="" and hij:
                 continue
             elif abc:
@@ -128,7 +148,9 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
                 continue
             elif hij:
                 hijA.append(hij)
-    print(hijA)
+            elif klm:
+                klmA.append(klm)
+               
     def vat_2(inp):
         ans_vat = ''
         new_set = list(set([i[0] for i in inp]))
@@ -141,10 +163,10 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
     vat_2ans = vat_2(defgA)
     
     
+    # print(new_d)
     d["date"] = min(abcA)
     d["total_amount"] = max(defgA)[0]
     d["vat"] = vat_2ans if int(hijA[0][0:-1]) /100 * d["total_amount"] == 0 else int(hijA[0][0:-1]) /100 * d["total_amount"]
-   
-    print( d)
-print("Apiyo")
+    d["invoice"] = klmA[0]
+print("Apiyo", d)
 
