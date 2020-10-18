@@ -50,25 +50,55 @@ hijA = []
 klmA = []
 nopA= []
 qrsA = []
+flat_list = []
 if get_handw_text_results.status == OperationStatusCodes.succeeded:
     for text_result in get_handw_text_results.analyze_result.read_results:
   
         for sourceTxt in text_result.lines:
             new_d = {}
             new_d[sourceTxt.text] = sourceTxt.bounding_box
-             
-            def Get_invoice_in_pdf(sourceTxt):
-                
-                prcnt = r"Invoice.*\.d*$"
-                prcnt1 =  r"INV.*\-\d.*$"
- 
-                if (re.findall(prcnt1, sourceTxt)):
-                    f_ans = re.findall(prcnt1, sourceTxt)[0]  
-                elif(re.findall(prcnt, sourceTxt)):
-                    f_ans = re.findall(prcnt, sourceTxt)[0]
+            flat_list.append(sourceTxt.text)
+            def Get_order_in_pdf(sourceTxt):
+                prcnt = r"Purchase.*\d.*$"
+                prcnt1 = r"Ord.*\d.*$"
+                prcnt2 = r"Ord.*\D"
+                if (re.findall(prcnt, sourceTxt)):
+                    ans = re.findall(prcnt, sourceTxt)[0]
+                    f_ans_split = ans.split()
+                    for i in f_ans_split:
+                        if i.isnumeric():
+                            f_ans = i
+                        else:
+                            f_ans = ''
+                elif(re.findall(prcnt1, sourceTxt)):
+                    ans = re.findall(prcnt1, sourceTxt)[0]
+                    f_ans_split = ans.split()
+                    for i in f_ans_split:
+                        if i.isnumeric():
+                            f_ans = i
+                        else:
+                            f_ans = ''
+                elif (re.findall(prcnt2, sourceTxt)):
+                    f_ans = re.findall(prcnt2, sourceTxt)[0]   
                 else:
                     f_ans = ''
+                return f_ans
+
+            def Get_invoice_in_pdf(sourceTxt):
                 
+                prcnt = r"Invoice.*\d.*$"
+                prcnt1 =  r"INV.*\-\d.*$"
+                f_ans = ''
+                if (re.findall(prcnt1, sourceTxt)):
+                    f_ans = re.findall(prcnt1, sourceTxt)[0]
+                elif(re.findall(prcnt, sourceTxt)):
+                    ans = re.findall(prcnt, sourceTxt)[0]
+                    f_ans_split = ans.split()
+                    for i in f_ans_split:
+                        if i.isnumeric():
+                            f_ans = i 
+                        else:
+                            f_ans = ''  
                 return f_ans
 
             def Get_vat_in_document(sourceTxt):
@@ -137,6 +167,7 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             defg = Get_total_amount_in_pdf(sourceTxt.text)
             hij = Get_vat_in_document(sourceTxt.text)
             klm = Get_invoice_in_pdf(sourceTxt.text)
+            nop = Get_order_in_pdf(sourceTxt.text)
             
             if abc=="" and defg=="" and hij:
                 continue
@@ -150,7 +181,16 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
                 hijA.append(hij)
             elif klm:
                 klmA.append(klm)
-               
+            elif nop:
+                nopA.append(nop) 
+        							
+            
+        def get_index_ord(inp, lst): 
+          
+            indx = lst.index(inp)
+            f_ans = lst[indx + 1]
+            return f_ans
+        order_2 = get_index_ord(nopA[0], flat_list)     
     def vat_2(inp):
         ans_vat = ''
         new_set = list(set([i[0] for i in inp]))
@@ -161,12 +201,15 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             ans_vat = 0
         return ans_vat
     vat_2ans = vat_2(defgA)
+            
     
+    print(nopA)
     
-    # print(new_d)
     d["date"] = min(abcA)
     d["total_amount"] = max(defgA)[0]
     d["vat"] = vat_2ans if int(hijA[0][0:-1]) /100 * d["total_amount"] == 0 else int(hijA[0][0:-1]) /100 * d["total_amount"]
-    d["invoice"] = klmA[0]
+    d["invoice_number"] = klmA[0]
+    d["purchase_order_number"] = nopA[0] if nopA[0].isnumeric() else order_2
+    
 print("Apiyo", d)
 
