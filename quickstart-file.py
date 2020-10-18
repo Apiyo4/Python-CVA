@@ -46,10 +46,21 @@ while True:
 d = {}
 abcA = []
 defgA = []
+hijA = []
 if get_handw_text_results.status == OperationStatusCodes.succeeded:
     for text_result in get_handw_text_results.analyze_result.read_results:
        
         for sourceTxt in text_result.lines:
+            def Get_vat_in_document(sourceTxt):
+                
+                prcnt = r"([0-9][0-9]%$|[0-9]%$)"
+
+                if(re.findall(prcnt, sourceTxt)):
+                    f_ans = re.findall(prcnt, sourceTxt)[0]
+                else:
+                    f_ans = 0
+    
+                return f_ans
             def Get_total_amount_in_pdf(sourceTxt):
                 lst = r"\d.*,\d{3}\.?\d*$"
                 dcm = r"\d.*\..?\d*$"
@@ -70,19 +81,14 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
                             ttl.append(float("".join(rem_c)))
                         except ValueError:
                             pass    
-                 
-                # f_ans = max(ttl) 
-                
+            
                 if ttl == []:
                     pass
                 else:
                     f_ans.extend(ttl)   
-                # for i in f_ans:
-                #     if i.isnumeric():
-                #         asd.extend(i)
                
                 asd = max(f_ans) if f_ans else 0  
-                # print(asd)     
+                    
                 return f_ans
                 
             def Get_date_in_pdf(sourceTxt):
@@ -110,8 +116,9 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
            
             abc = Get_date_in_pdf(sourceTxt.text)
             defg = Get_total_amount_in_pdf(sourceTxt.text)
+            hij = Get_vat_in_document(sourceTxt.text)
 
-            if abc=="" and defg=="":
+            if abc=="" and defg=="" and hij:
                 continue
             elif abc:
                 abcA.append(abc)
@@ -119,9 +126,25 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             elif  defg:
                 defgA.append(defg)
                 continue
- 
+            elif hij:
+                hijA.append(hij)
+    print(hijA)
+    def vat_2(inp):
+        ans_vat = ''
+        new_set = list(set([i[0] for i in inp]))
+        new_set.sort()
+        if  new_set[-1] - new_set[-2] in new_set:
+            ans_vat = new_set[-1] - new_set[-2] 
+        else:
+            ans_vat = 0
+        return ans_vat
+    vat_2ans = vat_2(defgA)
+    
+    
     d["date"] = min(abcA)
     d["total_amount"] = max(defgA)[0]
+    d["vat"] = vat_2ans if int(hijA[0][0:-1]) /100 * d["total_amount"] == 0 else int(hijA[0][0:-1]) /100 * d["total_amount"]
+   
     print( d)
 print("Apiyo")
 
