@@ -53,13 +53,31 @@ qrsA = []
 flat_list = []
 if get_handw_text_results.status == OperationStatusCodes.succeeded:
     for text_result in get_handw_text_results.analyze_result.read_results:
-  
+        
         for sourceTxt in text_result.lines:
             new_d = {}
             new_d[sourceTxt.text] = sourceTxt.bounding_box
             flat_list.append(sourceTxt.text)
+            def Get_company_in_pdf(sourceTxt):
+                frm = r"From:"
+                frm1 = r"From"
+                frm2= r"Invoice"
+                if(re.findall(frm, sourceTxt)):
+                    f_ans = re.findall(frm, sourceTxt)[0]
+                elif(re.findall(frm1, sourceTxt)):
+                    f_ans = re.findall(frm1, sourceTxt)[0]
+                elif(re.findall(frm2, sourceTxt)):
+                    f_ans = re.findall(frm2, sourceTxt)[0]
+                else:
+                    f_ans = 0
+                return f_ans
+            
             def Get_order_in_pdf(sourceTxt):
                 prcnt = r"Purchase.*\d.*$"
+
+                # purchase order 1234
+                # purchase : 1234
+
                 prcnt1 = r"Ord.*\d.*$"
                 prcnt2 = r"Ord.*\D"
                 if (re.findall(prcnt, sourceTxt)):
@@ -161,14 +179,16 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
                         f_dats = sublist
                         break   
                 return f_dats
-            
+
+            def Get_shipping_in_pdf(sourceTxt):
+                pass 
            
             abc = Get_date_in_pdf(sourceTxt.text)
             defg = Get_total_amount_in_pdf(sourceTxt.text)
             hij = Get_vat_in_document(sourceTxt.text)
             klm = Get_invoice_in_pdf(sourceTxt.text)
             nop = Get_order_in_pdf(sourceTxt.text)
-            
+            qrs = Get_company_in_pdf(sourceTxt.text)
             if abc=="" and defg=="" and hij:
                 continue
             elif abc:
@@ -183,14 +203,39 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
                 klmA.append(klm)
             elif nop:
                 nopA.append(nop) 
-        							
-            
+            elif qrs:
+                qrsA.append(qrs) 						    
         def get_index_ord(inp, lst): 
           
             indx = lst.index(inp)
             f_ans = lst[indx + 1]
             return f_ans
-        order_2 = get_index_ord(nopA[0], flat_list)     
+        
+        def get_company_name(inp,lst):
+
+            idx = int(lst.index(inp))
+            f_ans = ''
+            f_indx = int(idx + 1)
+            for i in lst[f_indx]:
+                if i.isnumeric():
+                    f_ans = lst[f_indx + 1]
+                else:
+                    f_ans = lst[f_indx]
+            return f_ans
+        def get_company_name_2(sublist, lst):
+            f_ans = ''
+            if "From:" in sublist:
+                f_ans = get_company_name("From:", lst)
+            elif "Form" in sublist:
+                f_ans = get_company_name("From", lst)
+            elif "Invoice" in sublist:
+                f_ans = get_company_name("Invoice", lst)
+            else:
+                f_ans =  lst[0]
+            return f_ans  
+        order_2 = get_index_ord(nopA[0], flat_list) 
+        company_name = get_company_name_2(qrsA, flat_list)
+
     def vat_2(inp):
         ans_vat = ''
         new_set = list(set([i[0] for i in inp]))
@@ -203,13 +248,16 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
     vat_2ans = vat_2(defgA)
             
     
-    print(nopA)
+    # print(company_name)
     
     d["date"] = min(abcA)
     d["total_amount"] = max(defgA)[0]
     d["vat"] = vat_2ans if int(hijA[0][0:-1]) /100 * d["total_amount"] == 0 else int(hijA[0][0:-1]) /100 * d["total_amount"]
     d["invoice_number"] = klmA[0]
     d["purchase_order_number"] = nopA[0] if nopA[0].isnumeric() else order_2
-    
+    d["supplier_name"] = company_name
 print("Apiyo", d)
+
+
+
 

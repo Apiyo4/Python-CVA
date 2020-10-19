@@ -1,29 +1,34 @@
-# import re
+import re 
+sourceTxt = "coming Annette Invoice jfjfjjj fjfjfjj From"
+prt = r"\d.*"
+# >>> print(re.match(r'From\s+', 'Fromage amk'))
+# None
+# >>> re.match(r'From\s+', 'From amk Thu May 14 19:12:10 1998')  
+# <re.Match object; span=(0, 5), match='From '>
+# f_ans = re.match(prt, sourceTxt)[0]
+for i in sourceTxt:
+    s= ''
+    if i.isnumeric():
+        continue
+    else:
+        s='yes'
+print(s)
 
-# sourceTxt = "I love math Order"
-# prcnt = r"Purchase.*\d.*$"
-# prcnt1 = r"Ord.*\d.*$"
-# prcnt2 = r"Ord.*\D"
-# if (re.findall(prcnt, sourceTxt)):
-#     ans = re.findall(prcnt, sourceTxt)[0]
-#     f_ans_split = ans.split()
-#     for i in f_ans_split:
-#         if i.isnumeric():
-#             f_ans = i
-#         else:
-#             f_ans = ''
-# elif(re.findall(prcnt1, sourceTxt)):
-#     ans = re.findall(prcnt1, sourceTxt)[0]
-#     f_ans_split = ans.split()
-#     for i in f_ans_split:
-#         if i.isnumeric():
-#             f_ans = i
-#         else:
-#             f_ans = ''
-# elif (re.findall(prcnt2, sourceTxt)):
-#     f_ans = re.findall(prcnt2, sourceTxt)[0]
+
+# print(f_ans.group())
+
+
+# frm = r"From :"
+# frm1 = r"From"
+# frm2= r"Invoice"
+
+# # f_ans = re.findall(frm, sourceTxt)[0]
+# if(re.findall(frm, sourceTxt)):
+#     f_ans = re.findall(frm, sourceTxt)[0]
+# elif(re.findall(frm1, sourceTxt)):
+#     f_ans = re.findall(frm1, sourceTxt)[0]
+# elif(re.findall(frm2, sourceTxt)):
+#     f_ans = re.findall(frm2, sourceTxt)[0]
 # else:
-#     f_ans = ''
+#     f_ans = 0
 # print(f_ans)
-
-
