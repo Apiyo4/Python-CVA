@@ -50,6 +50,7 @@ hijA = []
 klmA = []
 nopA= []
 qrsA = []
+uvwA = []
 flat_list = []
 if get_handw_text_results.status == OperationStatusCodes.succeeded:
     for text_result in get_handw_text_results.analyze_result.read_results:
@@ -58,8 +59,25 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             new_d = {}
             new_d[sourceTxt.text] = sourceTxt.bounding_box
             flat_list.append(sourceTxt.text)
+            def Get_shipping_in_pdf(sourceTxt):
+                shp = r"Shipping.*\d.*$"
+                shp1 = r"Shipping"
+                if (re.findall(shp, sourceTxt)):
+                    ans = re.findall(shp, sourceTxt)[0]
+                    f_ans_split = ans.split()
+                    for i in f_ans_split:
+                        if i.isnumeric():
+                            print(i)
+                            f_ans = i
+                        else:
+                            f_ans = ''
+                elif (re.findall(shp1, sourceTxt)):
+                    f_ans = re.findall(shp1, sourceTxt)[0]   
+                else:
+                    f_ans = "0"
+                return f_ans
             def Get_company_in_pdf(sourceTxt):
-                frm = r"From:"
+                frm = r"From\s?:"
                 frm1 = r"From"
                 frm2= r"Invoice"
                 if(re.findall(frm, sourceTxt)):
@@ -180,15 +198,14 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
                         break   
                 return f_dats
 
-            def Get_shipping_in_pdf(sourceTxt):
-                pass 
-           
+            
             abc = Get_date_in_pdf(sourceTxt.text)
             defg = Get_total_amount_in_pdf(sourceTxt.text)
             hij = Get_vat_in_document(sourceTxt.text)
             klm = Get_invoice_in_pdf(sourceTxt.text)
             nop = Get_order_in_pdf(sourceTxt.text)
             qrs = Get_company_in_pdf(sourceTxt.text)
+            uvw = Get_shipping_in_pdf(sourceTxt.text)
             if abc=="" and defg=="" and hij:
                 continue
             elif abc:
@@ -204,7 +221,9 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             elif nop:
                 nopA.append(nop) 
             elif qrs:
-                qrsA.append(qrs) 						    
+                qrsA.append(qrs)
+            elif uvw:
+                uvwA.append(uvw) 						    
         def get_index_ord(inp, lst): 
           
             indx = lst.index(inp)
@@ -226,7 +245,7 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             f_ans = ''
             if "From:" in sublist:
                 f_ans = get_company_name("From:", lst)
-            elif "Form" in sublist:
+            elif "From" in sublist:
                 f_ans = get_company_name("From", lst)
             elif "Invoice" in sublist:
                 f_ans = get_company_name("Invoice", lst)
@@ -235,7 +254,26 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             return f_ans  
         order_2 = get_index_ord(nopA[0], flat_list) 
         company_name = get_company_name_2(qrsA, flat_list)
-
+        def Get_shipping_cost(inp, lst):
+            f_ans = ''
+            inpt = ''
+            if inp:
+                inpt = inp[0]
+            else:
+                inpt = "0"
+        
+            if inpt.isnumeric():
+                f_ans = inpt
+            else:
+                indx = lst.index(inpt)
+                f_indx = int(indx + 1)
+                f_ans = lst[f_indx]
+                if f_ans.isnumeric():
+                    f_ans = lst[f_indx]
+                else:
+                    f_ans = 0
+            return f_ans
+            
     def vat_2(inp):
         ans_vat = ''
         new_set = list(set([i[0] for i in inp]))
@@ -246,13 +284,14 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             ans_vat = 0
         return ans_vat
     vat_2ans = vat_2(defgA)
+    shipping = int(Get_shipping_cost(uvwA, flat_list))
             
     
-    # print(company_name)
+    print(shipping)
     
     d["date"] = min(abcA)
     d["total_amount"] = max(defgA)[0]
-    d["vat"] = vat_2ans if int(hijA[0][0:-1]) /100 * d["total_amount"] == 0 else int(hijA[0][0:-1]) /100 * d["total_amount"]
+    d["vat"] = vat_2ans - shipping if int(hijA[0][0:-1]) /100 * d["total_amount"] == 0 else int(hijA[0][0:-1]) /100 -shipping * d["total_amount"]
     d["invoice_number"] = klmA[0]
     d["purchase_order_number"] = nopA[0] if nopA[0].isnumeric() else order_2
     d["supplier_name"] = company_name
