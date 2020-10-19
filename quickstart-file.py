@@ -26,7 +26,6 @@ else:
 
 computervision_client = ComputerVisionClient(endpoint, CognitiveServicesCredentials(subscription_key))
 
-remote_image_url = "https://raw.githubusercontent.com/Azure-Samples/cognitive-services-sample-data-files/master/ComputerVision/Images/landmark.jpg"
 
 print("===== Batch Read File - remote =====")
 
@@ -59,6 +58,8 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             new_d = {}
             new_d[sourceTxt.text] = sourceTxt.bounding_box
             flat_list.append(sourceTxt.text)
+
+
             def Get_shipping_in_pdf(sourceTxt):
                 shp = r"Shipping.*\d.*$"
                 shp1 = r"Shipping"
@@ -76,6 +77,7 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
                 else:
                     f_ans = "0"
                 return f_ans
+            
             def Get_company_in_pdf(sourceTxt):
                 frm = r"From\s?:"
                 frm1 = r"From"
@@ -92,10 +94,6 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             
             def Get_order_in_pdf(sourceTxt):
                 prcnt = r"Purchase.*\d.*$"
-
-                # purchase order 1234
-                # purchase : 1234
-
                 prcnt1 = r"Ord.*\d.*$"
                 prcnt2 = r"Ord.*\D"
                 if (re.findall(prcnt, sourceTxt)):
@@ -134,7 +132,9 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
                         if i.isnumeric():
                             f_ans = i 
                         else:
-                            f_ans = ''  
+                            f_ans = '' 
+                else:
+                    f_ans = '' 
                 return f_ans
 
             def Get_vat_in_document(sourceTxt):
@@ -206,6 +206,8 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             nop = Get_order_in_pdf(sourceTxt.text)
             qrs = Get_company_in_pdf(sourceTxt.text)
             uvw = Get_shipping_in_pdf(sourceTxt.text)
+            
+            
             if abc=="" and defg=="" and hij:
                 continue
             elif abc:
@@ -223,13 +225,25 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             elif qrs:
                 qrsA.append(qrs)
             elif uvw:
-                uvwA.append(uvw) 						    
+                uvwA.append(uvw) 
+
+
         def get_index_ord(inp, lst): 
           
             indx = lst.index(inp)
             f_ans = lst[indx + 1]
             return f_ans
-        
+        def get_indx_purchase(inp, lst):
+            indx = int(lst.index(inp))
+            f_ans = ''
+            for i in lst[indx:indx+4]:
+                if i.isnumeric():
+                    f_ans = i
+                    break
+                else:
+                    f_ans =''
+
+            return f_ans
         def get_company_name(inp,lst):
 
             idx = int(lst.index(inp))
@@ -252,8 +266,6 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             else:
                 f_ans =  lst[0]
             return f_ans  
-        order_2 = get_index_ord(nopA[0], flat_list) 
-        company_name = get_company_name_2(qrsA, flat_list)
         def Get_shipping_cost(inp, lst):
             f_ans = ''
             inpt = ''
@@ -273,6 +285,10 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
                 else:
                     f_ans = 0
             return f_ans
+        
+        order_2 = get_index_ord(nopA[0], flat_list) 
+        company_name = get_company_name_2(qrsA, flat_list)
+        purchase_2 = get_indx_purchase("Invoice", flat_list)
             
     def vat_2(inp):
         ans_vat = ''
@@ -287,12 +303,12 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
     shipping = int(Get_shipping_cost(uvwA, flat_list))
             
     
-    print(shipping)
+    # print(shipping)
     
     d["date"] = min(abcA)
     d["total_amount"] = max(defgA)[0]
-    d["vat"] = vat_2ans - shipping if int(hijA[0][0:-1]) /100 * d["total_amount"] == 0 else int(hijA[0][0:-1]) /100 -shipping * d["total_amount"]
-    d["invoice_number"] = klmA[0]
+    d["vat"] = vat_2ans - shipping if int(hijA[0][0:-1]) /100 * d["total_amount"] == 0 else int(hijA[0][0:-1]) /100 * d["total_amount"] - shipping
+    d["invoice_number"] = klmA[0] if klmA[0] else purchase_2
     d["purchase_order_number"] = nopA[0] if nopA[0].isnumeric() else order_2
     d["supplier_name"] = company_name
 print("Apiyo", d)
