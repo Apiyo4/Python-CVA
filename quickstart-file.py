@@ -61,6 +61,7 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
 
 
             def Get_shipping_in_pdf(sourceTxt):
+                # print(cf)
                 shp = r"Shipping.*\d.*$"
                 shp1 = r"Shipping"
                 if (re.findall(shp, sourceTxt)):
@@ -248,7 +249,7 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
 
             idx = int(lst.index(inp))
             f_ans = ''
-            f_indx = int(idx + 1)
+            f_indx = int(idx + 2)
             for i in lst[f_indx]:
                 if i.isnumeric():
                     f_ans = lst[f_indx + 1]
@@ -257,14 +258,25 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             return f_ans
         def get_company_name_2(sublist, lst):
             f_ans = ''
+            print(lst)
             if "From:" in sublist:
+                print("ab")
                 f_ans = get_company_name("From:", lst)
+                print(f_ans)
             elif "From" in sublist:
+                
                 f_ans = get_company_name("From", lst)
+            
             elif "Invoice" in sublist:
-                f_ans = get_company_name("Invoice", lst)
+                if f_ans:
+                    print("cd")
+                else:
+                    print("ef")
+                    f_ans = get_company_name("Invoice", lst)
             else:
+                print("ef")
                 f_ans =  lst[0]
+            print(f_ans)
             return f_ans  
         def Get_shipping_cost(inp, lst):
             f_ans = ''
