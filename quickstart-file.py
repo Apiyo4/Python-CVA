@@ -208,7 +208,6 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             qrs = Get_company_in_pdf(sourceTxt.text)
             uvw = Get_shipping_in_pdf(sourceTxt.text)
             
-            
             if abc=="" and defg=="" and hij:
                 continue
             elif abc:
@@ -228,7 +227,7 @@ if get_handw_text_results.status == OperationStatusCodes.succeeded:
             elif uvw:
                 uvwA.append(uvw) 
 
-
+# helper functions
         def get_index_ord(inp, lst): 
           
             indx = lst.index(inp)
